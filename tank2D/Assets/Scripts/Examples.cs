@@ -25,7 +25,7 @@ public class Examples : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void Update() // 게임 로직 업데이트 60프레임
     {
         if(Input.GetKeyDown(KeyCode.Space)) {
             //Destroy(gameObject);
@@ -39,7 +39,7 @@ public class Examples : MonoBehaviour
             sprite.flipX = false;
         }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
     }
-    private void FixedUpdate() {
+    private void FixedUpdate() { // 물리연산 업데이트 50프레임
         rb.velocity = Vector2.right * xInput * speed;
     }
 
