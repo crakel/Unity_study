@@ -8,5 +8,5 @@
 * tank2D
 
 * 학습 계획
-<img width="719" alt="스크린샷 2021-07-06 오전 10 09 45" src="https://user-images.githubusercontent.com/59333136/124528100-4dd5d800-de42-11eb-9bde-379ed2a4108c.png">
+<img width="717" alt="스크린샷 2021-07-06 오전 10 22 46" src="https://user-images.githubusercontent.com/59333136/124528822-1c5e0c00-de44-11eb-8b41-ba5509ec806e.png">
 
