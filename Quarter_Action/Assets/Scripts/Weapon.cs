@@ -8,6 +8,9 @@ public class Weapon : MonoBehaviour
     public Type type;
     public int damage;
     public float rate;
+    public int maxAmmo;
+    public int curAmmo;
+
     public BoxCollider meleeArea;
     public TrailRenderer trailEffect;
     public Transform bulletPos; // 총알 생성 위치
@@ -22,7 +25,8 @@ public class Weapon : MonoBehaviour
             StartCoroutine("Swing"); // 코루틴 실행 함수
         }
 
-        else if (type == Type.Range) {
+        else if (type == Type.Range && curAmmo > 0) {
+            curAmmo--;
             StartCoroutine("Shot");
         }
     }

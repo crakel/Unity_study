@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     public GameObject[] weapons;
     public bool[] hasWeapons;
     public GameObject[] grenades;
+    public Camera followCamera;
     
     public int ammo;
     public int coin;
@@ -26,6 +27,7 @@ public class Player : MonoBehaviour
     bool jDown;
     bool fDown;
     bool iDown;
+    bool rDown;
 
     // 장비 단축키 1, 2, 3
     bool sDown1;
@@ -35,6 +37,8 @@ public class Player : MonoBehaviour
     bool isDodge;
     bool isSwap;
     bool isFireReady = true;
+    bool isReload;
+    bool isBorder; // 벽 충돌 플래그
 
     Vector3 moveVec;
     Vector3 dodgeVec; // 회피 도중 방향전환이 되지 않도록 회피방향벡터추가
@@ -61,6 +65,7 @@ public class Player : MonoBehaviour
         Swap();
         Interaction();
         Attack();
+        Reload();
     }
     
     void Move() {
@@ -69,29 +74,44 @@ public class Player : MonoBehaviour
             moveVec = dodgeVec;
         }
 
-        if (isSwap || !isFireReady) { // Swap, 망치휘두르는 중
+        if (isSwap || isReload || !isFireReady) { // Swap, 장전, 망치휘두르는 중
             moveVec = Vector3.zero;
         }
 
-        transform.position += moveVec * speed * (wDown ? 0.3f : 1f) * Time.deltaTime;
+        if(!isBorder)
+            transform.position += moveVec * speed * (wDown ? 0.3f : 1f) * Time.deltaTime;
 
         anim.SetBool("isRun", moveVec != Vector3.zero);
         anim.SetBool("isWalk", wDown);
     }
 
-    void Turn() {
-        transform.LookAt(transform.position + moveVec);
-    }
     void GetInput() {
         hAxis = Input.GetAxisRaw("Horizontal");
         vAxis = Input.GetAxisRaw("Vertical");
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");
-        fDown = Input.GetButtonDown("Fire1");
+        fDown = Input.GetButton("Fire1");
+        rDown = Input.GetButtonDown("Reload");
         iDown = Input.GetButtonDown("Interaction");
         sDown1 = Input.GetButtonDown("Swap1");
         sDown2 = Input.GetButtonDown("Swap2");
         sDown3 = Input.GetButtonDown("Swap3");
+    }
+
+    void Turn() {
+        // #1 키보드에 의한 회전
+        transform.LookAt(transform.position + moveVec);
+
+        // #2 마우스에 의한 회전
+        if (fDown) {
+            Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
+            RaycastHit rayHit;
+            if(Physics.Raycast(ray, out rayHit, 100)) {
+                Vector3 nextVec = rayHit.point - transform.position;
+                nextVec.y = 0; // RayCastHit의 높이는 무시하도록
+                transform.LookAt(transform.position + nextVec);
+            }
+        }
     }
 
     void Jump() {
@@ -116,6 +136,32 @@ public class Player : MonoBehaviour
             fireDelay = 0;
         }
     }
+
+    void Reload() {
+        if(equipWeapon == null) {
+            return;
+        }
+
+        if(equipWeapon.type == Weapon.Type.Melee)
+            return;
+        
+        if(ammo == 0)
+            return;
+        
+        if(rDown && !isJump && !isDodge && !isSwap && isFireReady) {
+            anim.SetTrigger("doReload");
+            isReload = true;
+            Invoke("ReloadOut", 3f);
+        }
+    }
+
+    void ReloadOut() {
+        int reAmmo = ammo < equipWeapon.maxAmmo ? ammo : equipWeapon.maxAmmo;
+        equipWeapon.curAmmo = reAmmo;
+        ammo -= reAmmo;
+        isReload = false;
+    }
+
     void Dodge()
     {
         if (jDown && moveVec != Vector3.zero && !isJump && !isDodge && !isSwap)
@@ -176,6 +222,19 @@ public class Player : MonoBehaviour
                 Destroy(nearObject);
             }
         }
+    }
+
+    void FreezeRotation() {
+        rigid.angularVelocity = Vector3.zero;
+    }
+
+    void StopToWall() {
+        Debug.DrawRay(transform.position, transform.forward * 5, Color.green);
+        isBorder = Physics.Raycast(transform.position, transform.forward, 5, LayerMask.GetMask("Wall"));
+    }
+    void FixedUpdate() {
+        FreezeRotation();
+        StopToWall();
     }
 
     void OnCollisionEnter(Collision collision) {
