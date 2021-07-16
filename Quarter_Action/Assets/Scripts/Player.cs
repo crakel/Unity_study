@@ -41,11 +41,13 @@ public class Player : MonoBehaviour
     bool isFireReady = true;
     bool isReload;
     bool isBorder; // 벽 충돌 플래그
+    bool isDamage;
 
     Vector3 moveVec;
     Vector3 dodgeVec; // 회피 도중 방향전환이 되지 않도록 회피방향벡터추가
     Rigidbody rigid;
     Animator anim;
+    MeshRenderer[] meshs;
     GameObject nearObject;
     Weapon equipWeapon;
     int equipWeaponIndex = -1;
@@ -54,6 +56,7 @@ public class Player : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
+        meshs = GetComponentsInChildren<MeshRenderer>();
     }
 
     // Update is called once per frame
@@ -297,6 +300,28 @@ public class Player : MonoBehaviour
                     break;
             }
             Destroy(other.gameObject);
+        }
+
+        else if (other.tag == "EnemyBullet") {
+            if (!isDamage) {
+                Bullet enemyBullet = other.GetComponent<Bullet>();
+                health -= enemyBullet.damage;
+                StartCoroutine(OnDamage());
+            }
+        }
+    }
+
+    IEnumerator OnDamage() {
+        isDamage = true;
+        foreach(MeshRenderer mesh in meshs) {
+            mesh.material.color = Color.yellow;
+        }
+        
+        yield return new WaitForSeconds(1f);
+         
+        isDamage = false;
+        foreach(MeshRenderer mesh in meshs) {
+            mesh.material.color = Color.white;
         }
     }
     void OnTriggerStay(Collider other) {
