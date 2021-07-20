@@ -316,6 +316,10 @@ public class Player : MonoBehaviour
             if (!isDamage) {
                 Bullet enemyBullet = other.GetComponent<Bullet>();
                 health -= enemyBullet.damage;
+                
+                if(other.GetComponent<Rigidbody>() != null)
+                    Destroy(other.gameObject);
+                    
                 StartCoroutine(OnDamage());
             }
         }
