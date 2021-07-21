@@ -5,13 +5,16 @@ using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
-    public enum Type { A, B, C };
+    public enum Type { A, B, C, D};
     public Type enemyType;
     public int maxHealth;
     public int curHealth;
+    public int score;
+    public GameManager manager;
     public Transform target;
     public BoxCollider meleeArea;
     public GameObject bullet;
+    public GameObject[] coins;
     public bool isChase;
     public bool isAttack;
 
@@ -106,7 +109,7 @@ public class Enemy : MonoBehaviour
 
                 yield return new WaitForSeconds(2f);
                 break;
-                
+
             case Type.C:
                 yield return new WaitForSeconds(0.5f);
                 GameObject instantBullet = Instantiate(bullet, transform.position, transform.rotation);
@@ -171,6 +174,23 @@ public class Enemy : MonoBehaviour
             nav.enabled = false;
 
             anim.SetTrigger("doDie");
+
+            Player player = target.GetComponent<Player>();
+            player.score += score;
+            int ranCoin = Random.Range(0, 3);
+            Instantiate(coins[ranCoin], transform.position, Quaternion.identity);
+
+            switch(enemyType) {
+                case Type.A:
+                    manager.enemyCntA--;
+                    break;
+                case Type.B:
+                    manager.enemyCntB--;
+                    break;
+                case Type.C:
+                    manager.enemyCntC--;
+                    break;
+            }
 
             if (isGrenade) {
                 reactVec = reactVec.normalized;
