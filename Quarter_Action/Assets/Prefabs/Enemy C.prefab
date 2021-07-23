@@ -735,9 +735,9 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!65 &6548433656121265443
 BoxCollider:
@@ -767,15 +767,15 @@ MonoBehaviour:
   enemyType: 2
   maxHealth: 200
   curHealth: 200
-  score: 0
+  score: 500
   manager: {fileID: 0}
   target: {fileID: 0}
   meleeArea: {fileID: 0}
   bullet: {fileID: 828069623122143010, guid: a4436eb64c5ed41d982e87a575252e25, type: 3}
   coins:
   - {fileID: 7640515431414906828, guid: 830cce6d1da1b487b8f7bbd14f0f71c7, type: 3}
-  - {fileID: 5626598509938386498, guid: 5f990ffaa293ab14ebc81ec38b817d0b, type: 3}
-  - {fileID: 560161617807170553, guid: 99cca47ba8d60394e8b16b13b4054a38, type: 3}
+  - {fileID: 3066214067514247458, guid: cdba1bfa80477466cbe13c6ec082a9ae, type: 3}
+  - {fileID: 4710182313983685642, guid: ea32083aff88f4e12aded820569f332d, type: 3}
   isChase: 0
   isAttack: 0
 --- !u!195 &6548433656121265442

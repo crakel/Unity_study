@@ -10,6 +10,7 @@ public class Player : MonoBehaviour
     public GameObject[] grenades;
     public GameObject grenadeObj;
     public Camera followCamera;
+    public GameManager manager;
     
     public int score;
     public int ammo;
@@ -44,6 +45,7 @@ public class Player : MonoBehaviour
     bool isBorder; // 벽 충돌 플래그
     bool isDamage;
     bool isShop;
+    bool isDead = false;
 
     Vector3 moveVec;
     Vector3 dodgeVec; // 회피 도중 방향전환이 되지 않도록 회피방향벡터추가
@@ -84,7 +86,7 @@ public class Player : MonoBehaviour
             moveVec = dodgeVec;
         }
 
-        if (isSwap || isReload || !isFireReady) { // Swap, 장전, 망치휘두르는 중
+        if (isSwap || isReload || !isFireReady || isDead) { // Swap, 장전, 망치휘두르는 중
             moveVec = Vector3.zero;
         }
 
@@ -114,7 +116,7 @@ public class Player : MonoBehaviour
         transform.LookAt(transform.position + moveVec);
 
         // #2 마우스에 의한 회전
-        if (fDown) {
+        if (fDown && !isDead) {
             Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit rayHit;
             if(Physics.Raycast(ray, out rayHit, 100)) {
@@ -126,7 +128,7 @@ public class Player : MonoBehaviour
     }
 
     void Jump() {
-        if (jDown && moveVec == Vector3.zero && !isJump && !isDodge) {
+        if (jDown && moveVec == Vector3.zero && !isJump && !isDodge && !isShop && !isDead) {
             rigid.AddForce(Vector3.up * 25, ForceMode.Impulse);
             anim.SetBool("isJump", true);
             anim.SetTrigger("doJump");
@@ -138,7 +140,7 @@ public class Player : MonoBehaviour
         if(hasGrenades == 0)
             return;
         
-        if(gDown && !isReload && !isSwap) {
+        if(gDown && !isReload && !isSwap && !isDead) {
             Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit rayHit;
             if (Physics.Raycast(ray, out rayHit, 100))
@@ -164,7 +166,7 @@ public class Player : MonoBehaviour
         fireDelay += Time.deltaTime; // 공격딜레이 시간을 더해줌
         isFireReady = equipWeapon.rate < fireDelay;
         
-        if (fDown && isFireReady && !isDodge && !isSwap && !isShop) {
+        if (fDown && isFireReady && !isDodge && !isSwap && !isShop && !isDead) {
             equipWeapon.Use(); // 공격 로직은 모두 Weapon.cs에
             anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
             fireDelay = 0;
@@ -182,7 +184,7 @@ public class Player : MonoBehaviour
         if(ammo == 0)
             return;
         
-        if(rDown && !isJump && !isDodge && !isSwap && isFireReady && !isShop) {
+        if(rDown && !isJump && !isDodge && !isSwap && isFireReady && !isShop && !isDead) {
             anim.SetTrigger("doReload");
             isReload = true;
             Invoke("ReloadOut", 3f);
@@ -198,7 +200,7 @@ public class Player : MonoBehaviour
 
     void Dodge()
     {
-        if (jDown && moveVec != Vector3.zero && !isJump && !isDodge && !isSwap && !isShop)
+        if (jDown && moveVec != Vector3.zero && !isJump && !isDodge && !isSwap && !isShop && !isDead)
         {
             dodgeVec = moveVec;
             speed *= 2;
@@ -247,7 +249,7 @@ public class Player : MonoBehaviour
         isSwap = false;
     }
     void Interaction() {
-        if (iDown && nearObject != null && !isJump && !isDodge) {
+        if (iDown && nearObject != null && !isJump && !isDodge && !isShop && !isDead) {
             if (nearObject.tag == "Weapon") {
                 Item item = nearObject.GetComponent<Item>();
                 int weaponIndex = item.value;
@@ -319,7 +321,7 @@ public class Player : MonoBehaviour
                 
                 if(other.GetComponent<Rigidbody>() != null)
                     Destroy(other.gameObject);
-                    
+                
                 StartCoroutine(OnDamage());
             }
         }
@@ -331,12 +333,22 @@ public class Player : MonoBehaviour
             mesh.material.color = Color.yellow;
         }
         
+        if(health <= 0 && !isDead) {
+            OnDie();
+        }
+        
         yield return new WaitForSeconds(1f);
          
         isDamage = false;
         foreach(MeshRenderer mesh in meshs) {
             mesh.material.color = Color.white;
         }
+    }
+
+    void OnDie() {
+        anim.SetTrigger("doDie");
+        isDead = true;
+        manager.GameOver();
     }
     void OnTriggerStay(Collider other) {
         if (other.tag == "Weapon" || other.tag == "Shop")

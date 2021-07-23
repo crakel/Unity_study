@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -25,9 +26,10 @@ public class GameManager : MonoBehaviour
 
     public GameObject menuPanel;
     public GameObject gamePanel;
+    public GameObject overPanel;
     public Text maxScoreTxt;
     public Text scoreTxt;
-    public Text stageTxt;    
+    public Text stageTxt;
     public Text playTimeTxt;
     public Text playerHealthTxt;
     public Text playerAmmoTxt;
@@ -42,10 +44,18 @@ public class GameManager : MonoBehaviour
     public Text enemyCTxt;
     public RectTransform bossHealthGroup;
     public RectTransform bossHealthBar;
+    public Text curScoreTxt;
+    public Text bestTxt;
 
     void Awake() {
+        if(PlayerPrefs.HasKey("MaxScore")) {
+             PlayerPrefs.SetInt("MaxScore", 0);
+        }
+
         enemyList = new List<int>();
         maxScoreTxt.text = string.Format("{0:n0}", PlayerPrefs.GetInt("MaxScore"));
+
+
     }
 
     public void GameStart() {
@@ -56,6 +66,22 @@ public class GameManager : MonoBehaviour
         gamePanel.SetActive(true);
 
         player.gameObject.SetActive(true);
+    }
+    public void GameOver() {
+        gamePanel.SetActive(false);
+        overPanel.SetActive(true);
+        curScoreTxt.text = scoreTxt.text;
+        
+        int maxScore = PlayerPrefs.GetInt("MaxScore");
+
+        if(player.score > maxScore) {
+            bestTxt.gameObject.SetActive(true);
+            PlayerPrefs.SetInt("MaxScore", player.score);
+        }
+    }
+
+    public void Restart() {
+        SceneManager.LoadScene(0);
     }
 
     public void StageStart() {
@@ -68,7 +94,6 @@ public class GameManager : MonoBehaviour
         
         isBattle = true;
         StartCoroutine(InBattle());
-
     }
 
     public void StageEnd() {
@@ -118,6 +143,7 @@ public class GameManager : MonoBehaviour
 
         while (enemyList.Count > 0) {
             int ranZone = Random.Range(0, 4);
+            enemyZones[ranZone].position = Vector3.up * (-2f);
             GameObject instantEnemy = Instantiate(enemies[enemyList[0]], enemyZones[ranZone].position, enemyZones[ranZone].rotation);
             Enemy enemy = instantEnemy.GetComponent<Enemy>();
             enemy.target = player.transform;
@@ -152,11 +178,11 @@ public class GameManager : MonoBehaviour
         // 플레이어 UI
         playerHealthTxt.text = player.health + " / " + player.maxHealth;
         playerCoinTxt.text = string.Format("{0:n0}", player.coin);
-        if (player.equipWeapon == null) {
+        if (player.equipWeapon == null || player.equipWeapon.type == Weapon.Type.Melee) {
             playerAmmoTxt.text = "- / " + player.ammo;
         }
 
-        else if (player.equipWeapon.type == Weapon.Type.Melee) {
+        else if (player.equipWeapon.type == Weapon.Type.Range) {
             playerAmmoTxt.text = player.equipWeapon.curAmmo + " / " + player.ammo;
         }
 

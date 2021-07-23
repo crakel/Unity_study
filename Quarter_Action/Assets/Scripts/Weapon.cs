@@ -39,11 +39,11 @@ public class Weapon : MonoBehaviour
         trailEffect.enabled = true;
 
         // 2번 구역
-        yield return new WaitForSeconds(0.3f); // 0.3 초 대기
+        yield return new WaitForSeconds(0.6f); // 0.3 초 대기
         meleeArea.enabled = false;
         
         // 3번 구역
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.6f);
         trailEffect.enabled = false;
     }
 
