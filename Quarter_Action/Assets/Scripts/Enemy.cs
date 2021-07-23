@@ -18,20 +18,21 @@ public class Enemy : MonoBehaviour
     public bool isChase;
     public bool isAttack;
 
-    Rigidbody rigid;
-    BoxCollider boxCollider;
-    Material mat;
-    NavMeshAgent nav;
-    Animator anim;
+    public Rigidbody rigid;
+    public BoxCollider boxCollider;
+    public MeshRenderer[] meshs;
+    public NavMeshAgent nav;
+    public Animator anim;
 
     void Awake() {
         rigid = GetComponent<Rigidbody>();
         boxCollider = GetComponent<BoxCollider>();
-        mat = GetComponentInChildren<MeshRenderer>().material;
+        meshs = GetComponentsInChildren<MeshRenderer>();
         nav = GetComponent<NavMeshAgent>();
         anim = GetComponentInChildren<Animator>();
-
-        Invoke("ChaseStart", 2);
+        
+        if(enemyType != Type.D)
+            Invoke("ChaseStart", 2);
     }
 
     void ChaseStart() {
@@ -39,7 +40,7 @@ public class Enemy : MonoBehaviour
         anim.SetBool("isWalk", true);
     }
     void Update() {
-        if(nav.enabled) {
+        if(nav.enabled && enemyType != Type.D) {
             nav.SetDestination(target.position);
             nav.isStopped = !isChase;
         }
@@ -52,34 +53,40 @@ public class Enemy : MonoBehaviour
     }
 
     void Targeting() {
-        float targetRadius = 1.5f;
-        float targetRange = 3f;
+        if (enemyType != Type.D)
+        {
+            float targetRadius = 1.5f;
+            float targetRange = 3f;
 
-        switch (enemyType) { 
-            case Type.A:
-                targetRadius = 1.5f;
-                targetRange = 3f;
-                break;
-            case Type.B:
-                targetRadius = 1f;
-                targetRange = 12f;
-                break;
-            case Type.C:
-                targetRadius = 0.5f;
-                targetRange = 25f;
-                break;
+            switch (enemyType)
+            {
+                case Type.A:
+                    targetRadius = 1.5f;
+                    targetRange = 3f;
+                    break;
+                case Type.B:
+                    targetRadius = 1f;
+                    targetRange = 12f;
+                    break;
+                case Type.C:
+                    targetRadius = 0.5f;
+                    targetRange = 25f;
+                    break;
+            }
+
+            RaycastHit[] rayHits =
+                Physics.SphereCastAll(transform.position,
+                targetRadius,
+                transform.forward,
+                targetRange,
+                LayerMask.GetMask("Player"));
+
+            if (rayHits.Length > 0 && !isAttack)
+            {
+                StartCoroutine(Attack());
+            }
         }
 
-        RaycastHit[] rayHits =
-            Physics.SphereCastAll(transform.position,
-            targetRadius,
-            transform.forward,
-            targetRange,
-            LayerMask.GetMask("Player"));
-        
-        if(rayHits.Length > 0 && !isAttack) {
-            StartCoroutine(Attack());
-        }
     }
 
     IEnumerator Attack() {
@@ -160,15 +167,20 @@ public class Enemy : MonoBehaviour
 
 
     IEnumerator OnDamage(Vector3 reactVec, bool isGrenade) {
-        mat.color = Color.red;
+        foreach(MeshRenderer mesh in meshs)  
+            mesh.material.color = Color.red;
+
         yield return new WaitForSeconds(0.1f);
 
         if(curHealth > 0) {
-            mat.color = Color.white;
+            foreach(MeshRenderer mesh in meshs)  
+                mesh.material.color = Color.white;
         }
 
         else {
-            mat.color = Color.gray;
+            foreach(MeshRenderer mesh in meshs)  
+                mesh.material.color = Color.gray;
+            
             gameObject.layer = 14;
             isChase = false;
             nav.enabled = false;
@@ -207,8 +219,8 @@ public class Enemy : MonoBehaviour
                 rigid.AddForce(reactVec * 5, ForceMode.Impulse);
             }
 
-
-            Destroy(gameObject, 4);
+            if(enemyType != Type.D)
+                Destroy(gameObject, 4);
         }
     }
 }
